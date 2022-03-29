@@ -232,4 +232,35 @@ ggplot(as.data.frame(cvFit$resample), aes(Accuracy)) +
        y="Count")
 ```
 
+NEED TO GO BACK AND TIDY UP THESE GRAPHS. 
+NEED TO EXPLAIN SPATIAL CV.
+NEED TO GO AND MAKE COMMENTS ON THE CODE BELOW
 
+```{r spatial_CV, warning = FALSE, message = FALSE}
+library(mlr)
+
+# https://www.r-bloggers.com/2018/07/visualization-of-spatial-cross-validation-partitioning/
+# https://geocompr.robinlovelace.net/spatial-cv.html
+
+# create a resampling description with parameters on how we will resample our data for the cross validation. 
+rdesc = makeResampleDesc("SpRepCV", folds = 5, reps = 4)
+
+factorized_training = st_drop_geometry(allCalgaryTrain)
+factorized_training$inundation = as.factor(factorized_training$inundation)
+
+calgaryTrainingTask = makeClassifTask(data = factorized_training,
+                                      target = "inundation",
+                                      coordinates = as.data.frame(st_coordinates(st_centroid(allCalgaryTrain)))
+)
+
+
+resamp = resample(makeLearner("classif.qda"), calgaryTrainingTask, rdesc)
+
+plots = createSpatialResamplingPlots(calgaryTrainingTask, resamp, crs = 4326,
+  repetitions = 2)
+plots
+
+sp_cv = mlr::resample(makeLearner("classif.qda"), calgaryTrainingTask, rdesc, measure = acc)
+summary(sp_cv$measures.test$acc)
+
+```
