@@ -28,6 +28,7 @@ library(knitr)
 library(kableExtra)
 library(tigris)
 library(viridis)
+install.packages("lwgeom", dependencies = TRUE)
 ```
 
 
