@@ -102,35 +102,80 @@ ggplot() +
   labs(title="cal_inundation")
 ```
 
-The variables are now ready to be split into training and test sets, and finally, added to the linear model. The <code>glm()</code> takes in the independent variables and dependent from a portion of the dataset and produces a formula that minimizes prediction error. The formula's performance predicting the dependent variables in the test set can be used to characterize the performance of the model in Calgary.
-
-The <code>set.seed()</code> and <code>createDataPartition</code> functions help to randomly select a portion (in this case 70% of cells) to join the training set. The rest form the test set.
+The variables are now ready to be split into training and test sets, and finally, added to the linear model. The <code>set.seed()</code> and <code>createDataPartition</code> functions help to randomly select a portion (in this case 70% of cells) to join the training set. The rest form the test set.
 
 ```{r training_set}
+# Randomly separate data into 70% training set, 30% test set
 set.seed(3456)
-trainIndex <- createDataPartition(preserve$inundation, p = .70,
+trainIndex <- createDataPartition(allCalgary$inundation, p = .70,
                                   list = FALSE,
                                   times = 1)
 
-preserveTrain <- preserve[ trainIndex,]
-preserveTest  <- preserve[-trainIndex,]
+allCalgaryTrain <- allCalgary[ trainIndex,]
+allCalgaryTest  <- allCalgary[-trainIndex,]
 ```
                      
-              
+The <code>glm()</code> takes in the independent variables and dependent from a portion of the dataset and produces a formula that minimizes prediction error. The formula's performance predicting the dependent variables in the test set can be used to characterize the performance of the model in Calgary. It can also be used to predict inundation given the previously outlined independent variables in other locations, such as Sacramento.
+
+```{r create_model, warining = FALSE, message = FALSE}
+# Convert to regular dataframe, R cannot run a regression on an sf
+inundationModel <- glm(inundation ~ ., 
+                    family="binomial"(link="logit"), data = allCalgaryTrain %>%
+                                                            as.data.frame() %>%
+                                                            select(-geometry))
+```
+
+
 ### 3) logistic metrics
 
-Below, the five independent fishnet variables are used to create a generalized linear model.
+```{r logistc_metrics, warining = FALSE, message = FALSE}
+# Get summary statistics for the inundationModel
+summary(inundationModel)
+```
 
-Now let’s estimate a logistic regression model. The binomial logit model runs in the `glm` function (generalized linear models). We specify the dependent variable as `preserve` and run the model on our training set `preserveTrain`.
+The model output, as displayed by the <code>summary()</code> function, shows the coefficients of the model. This is mathematically what produces inundation predictions by cell. The coefficients of <code>meanElevation</code> and <code>meanStreamDistance</code> are both negative, meaning that the greater these values get, the lower the chance a given cell will be predicted to be in an inundation zone. This makes sense, as low elevation and low distance to streams pose greater flood risks.
 
-Note how we can use the dplyr pipes right in the data parameter. We have to convert to a data frame because R won’t know how to run a regression on an sf.
+HERE WE NEED TO ADD MORE ANALYSIS REGARDING OUR MODEL'S OUTPUT
 
-Let's look at the model output, we see that we have coefficients, and p-values, but no R-squared. There are other goodness of fit metrics we will look at. The AIC, though not on a 0-1 scale like R-squared, has a similar function in that it tells you about overall model fit, but not about error and accuracy.
+HERE WE NEED TO ADD MORE ABOUT THE P VALUE OF THE DIFFERENT FACTORS
 
-We are not really interested in our coefficients other than their magnitude, directionality and p-value (generall). But for the record, the way the coefficients in a logistic regression are interpreted is different than in OLS - we are talking in terms of "odds" of an outcome occurring (in our case odds of land being preserved.). If we exponentiate the coefficient (`exp()`) we can interpret it as *all else equal* the exponentiated value being the increase or decrease in the odds of the outcome.
+MAYBE WE ALSO CAN COME BACK TO THIS AND DO A LITTLE MORE WITH EXPONENTIATION
+_________
+But for the record, the way the coefficients in a logistic regression are interpreted is different than in OLS - we are talking in terms of "odds" of an outcome occurring (in our case odds of land being preserved.). If we exponentiate the coefficient (`exp()`) we can interpret it as *all else equal* the exponentiated value being the increase or decrease in the odds of the outcome.
+_________
 
+The <code>inundationModel</code> can be used to predict for any geographic cells given the previously specified independent variables with the <code>predict()</code> function. In this case, the model will be used to predict for the test set. The output, <code>inundationProbability</code>, will describe the model's prediction of the likelihood that each cell will be in an inundation zone.
 
+The histogram below demonstrates that the great majority of tracts are predicted to have a low likelihood of being in an inundation zone. This makes sense, because within Calgary city limits, based on the training set, most cells of land were not in an inundation zone.
 
+```{r predict_calgary_test}
+# Get the results of the model on the Test set, create a histogram of the probability
+# The parameter type="response" ensures that the probabilities range from 0 to 1.
+inundationProbability <- predict(inundationModel, allCalgaryTest, type="response")
+
+hist(inundationProbability)
+```
+
+Let’s put `classProbs` into a data frame along with the observed `preserve` outome, which is either `1` for preserved land or `0` for unpreserved.
+
+Then we build this funky plot, `testProbsPlot`. The vertical line represents a 0.5 probability of preservation.
+
+*Can you interperet this plot? Can you come up with a title for this plot?*
+
+```{r plot_preds}
+testProbs <- data.frame(obs = as.numeric(preserveTest$preserve),
+                        pred = classProbs)
+
+ggplot(testProbs, aes(x = pred, fill=as.factor(obs))) + 
+  geom_density() +
+  facet_grid(obs ~ .) + 
+  xlab("Probability") + 
+  geom_vline(xintercept = .5) +
+  scale_fill_manual(values = c("dark blue", "dark green"),
+                      labels = c("Not Preserved","Preserved"),
+                      name = "")+
+  plotTheme
+```
 
 ### 4) Goodness of fit metrics
 
