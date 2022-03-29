@@ -14,6 +14,9 @@ code_download: true
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen=999)
 library(knitr)
+library(raster)
+library(ggplot2)
+library(dplyrr)
 ```
 
 
@@ -26,9 +29,32 @@ The `sf` package offers really easy way to create fishnet grids - `st_make_grid`
 Let's load a spatial data file and make our very own. Remember our data from Chester County in Week 2? Let's load our Chester County municipalities file, then use `st_union` to go from a bunch of polygons to just one (e.g. the boundary).
 
 ```{r load_chesco, warning = FALSE, message = FALSE}
-chesterBoundary <- read_sf("https://raw.githubusercontent.com/mafichman/CPLN_675/main/Week_2/data/R_Data/Chester_MuniBoundaries.geojson") %>%
-  st_union()
 
+sacramento_elevation <- raster("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.tif")
+
+
+fishnet <- 
+  st_make_grid(sacramento_elevation,
+               cellsize = 10000, 
+               square = TRUE) %>%         # clips the grid to the chesterBoundary file
+  st_sf() %>%
+  mutate(uniqueID = rownames(.))
+
+
+
+# Import pvout tif file
+temp <- sacramento_elevation %>%
+# Crop it to fit the dimensions of the fishnet
+  crop(y = fishnet) %>%
+  # Convert to spatial polygons data.frame
+  as('SpatialPolygonsDataFrame') %>%
+  # Convert to Sf format
+  st_as_sf()
+
+
+
+ggplot()+
+  geom_sf(data = fishnet)
 ```
 
 Not sure what the projection is? It's important to know - the cellsize you set for your fishnet will be in the native units of the projection. Check `st_crs(chesterBoundary)` to find out, and `st_transform` to the projection you need if necessary.
