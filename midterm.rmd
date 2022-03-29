@@ -194,3 +194,20 @@ caret::confusionMatrix(reference = as.factor(inundationTestProb$obs),
 ```
 
 Due to the low likelihood of inundation predicted by the model for all zones, a low threshold is necessary to achieve any sensitivity (true positivity). This means some specificity is sacrificed, as more non-inundation zones are labeled as inundation zones.
+
+An ROC or "Reciever Operating Characteristic" curve is anther metric that describes a model's goodness of fit. It measures the relationship between sensitivity (True positive fraction) and specificity (false positive fraction) at different levels of prediction threshold. On the chart below, the black line is the performance of the model, and it is compared to a gray line that represents a hypothetical "coin flip" model.
+
+```{r roc_curve, message = FALSE, warning = FALSE}
+
+ggplot(inundationTestProb, aes(d = obs, m = pred)) + 
+  geom_roc(n.cuts = 50, labels = FALSE) + 
+  style_roc(theme = theme_grey) +
+  geom_abline(slope = 1, intercept = 0, size = 1.5, color = 'grey') 
+```
+
+The AUC (Area Under Curve) measures the models ability to make distinctions between the two classes, in this case non-inundation and inundation zones on a fishnet.
+  
+```{r auc, warning = FALSE}
+auc(inundationTestProb$obs, inundationTestProb$pred)
+```
+
