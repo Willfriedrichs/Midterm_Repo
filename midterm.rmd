@@ -59,7 +59,7 @@ sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midt
 ```
 
 
-### 2) Building Variables
+### 2) Building Variables and Running Model
 
 
 In this step, the variables are joined together to form one table that includes each of the independent variables and the dependent variable. Variables will also be adjusted for better comparison across regions.
@@ -102,7 +102,21 @@ ggplot() +
   labs(title="cal_inundation")
 ```
 
-                                   
+The variables are now ready to be split into training and test sets, and finally, added to the linear model. The <code>glm()</code> takes in the independent variables and dependent from a portion of the dataset and produces a formula that minimizes prediction error. The formula's performance predicting the dependent variables in the test set can be used to characterize the performance of the model in Calgary.
+
+The <code>set.seed()</code> and <code>createDataPartition</code> functions help to randomly select a portion (in this case 70% of cells) to join the training set. The rest form the test set.
+
+```{r training_set}
+set.seed(3456)
+trainIndex <- createDataPartition(preserve$inundation, p = .70,
+                                  list = FALSE,
+                                  times = 1)
+
+preserveTrain <- preserve[ trainIndex,]
+preserveTest  <- preserve[-trainIndex,]
+```
+                     
+              
 ### 3) logistic metrics
 
 Below, the five independent fishnet variables are used to create a generalized linear model.
