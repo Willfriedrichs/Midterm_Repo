@@ -44,7 +44,7 @@ NEED LAND USE, NEED TREE COVER, NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HER
 <code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
 
 
-```{r load_chesco, warning = FALSE, message = FALSE}
+```{r load_json, warning = FALSE, message = FALSE}
 cal_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/Cal_dem_filled.json")
 
 cal_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/cal_dist2streams.json")
@@ -56,18 +56,66 @@ cal_inundation[is.na(cal_inundation)] = 0
 sac_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.geojson")
 
 sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dist2streams.geojson")
-
-ggplot() +
-  geom_sf(data=cal_inundation, aes(fill=as.factor(calgary_inundation.MAJORITY))) +
-  labs(title="cal_inundation")
 ```
 
 
 ### 2) Building Variables
 
-#MAKE CHANGES TO VARIABLES HERE: E.G. MAKE SURE ELEVATION IS RELATIVE (subtract the minimum elevation from all values)
 
+In this step, the variables are joined together to form one table that includes each of the independent variables and the dependent variable. Variables will also be adjusted for better comparison across regions.
+
+```{r load_chesco, warning = FALSE, message = FALSE}
+# cal_dem only needs its geometry and information as to the mean elevation of each cell.
+# mean elevation will be re-evaluated relative to minimum non-zero fishnet cell
+cal_dem = cal_dem %>% select(ZonalSt_Fishnet1.MEAN)
+min_nonzero_cell = min(cal_dem$ZonalSt_Fishnet1.MEAN)
+cal_dem$ZonalSt_Fishnet1.MEAN = cal_dem$ZonalSt_Fishnet1.MEAN - min_nonzero_cell
+
+
+#cal_streamdist only needs its geometry and the mean distance to stream from any given cell.
+cal_streamdist = cal_streamdist %>% select(dist2streams.MEAN)
+
+#cal_inundation only needs its geometry and the majority inundation for cells
+cal_inundation = cal_inundation %>% select(calgary_inundation.MAJORITY)
+
+
+# sac_dem only needs its geometry and information as to the mean elevation of each cell.
+# since the minimum mean elevation is nonzero in Sacramento, no readjustment is necessary.
+sac_dem = sac_dem %>% select(demFilledSAC.MEAN)
+
+#sac_streamdist only needs its geometry and the mean distance to stream from any given cell.
+sac_streamdist = sac_streamdist %>% select(dist2streamsSAC.MEAN)
+
+# ADDITIONAL VARIABLES NEED TO BE ADDED HERE
+
+# Once in a single dataframe, discard OIDs and rename variables
+allCalgary = st_join(cal_dem, cal_streamdist, largest = TRUE) %>%
+             st_join(cal_inundation, largest = TRUE)
+
+
+allCalgary = allCalgary %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
+                                   meanStreamDistance = dist2streams.MEAN,
+                                   inundation = calgary_inundation.MAJORITY)
+
+ggplot() +
+  geom_sf(data=allCalgary, aes(fill=as.factor(inundation))) +
+  labs(title="cal_inundation")
+```
+
+                                   
 ### 3) logistic metrics
+
+Below, the five independent fishnet variables are used to create a generalized linear model.
+
+Now let’s estimate a logistic regression model. The binomial logit model runs in the `glm` function (generalized linear models). We specify the dependent variable as `preserve` and run the model on our training set `preserveTrain`.
+
+Note how we can use the dplyr pipes right in the data parameter. We have to convert to a data frame because R won’t know how to run a regression on an sf.
+
+Let's look at the model output, we see that we have coefficients, and p-values, but no R-squared. There are other goodness of fit metrics we will look at. The AIC, though not on a 0-1 scale like R-squared, has a similar function in that it tells you about overall model fit, but not about error and accuracy.
+
+We are not really interested in our coefficients other than their magnitude, directionality and p-value (generall). But for the record, the way the coefficients in a logistic regression are interpreted is different than in OLS - we are talking in terms of "odds" of an outcome occurring (in our case odds of land being preserved.). If we exponentiate the coefficient (`exp()`) we can interpret it as *all else equal* the exponentiated value being the increase or decrease in the odds of the outcome.
+
+
 
 
 ### 4) Goodness of fit metrics
