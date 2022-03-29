@@ -37,7 +37,7 @@ The following factors will be examined as predictors of Calgary's flood inundati
 
 <code>cal_dem</code>, <code>sac_dem</code>: For Calgary and Sacramento County respectively, <code>cal_dem</code> and <code>sac_dem</code> represent elevation data relative to the lowest point in the area. Flood inundation is probably more likely in low-lying areas than high elevation areas, so there is reason to suspect this factor might be significant.
 
-<code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, <code>cal_dem</code> and <code>sac_dem</code> describe the distance between any cell and a stream. This is due to our hypothesis that areas with streams have a higher flooding suceptibility. 
+<code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, <code>cal_streamdist</code> and <code>sac_streamdist</code> describe the distance between any cell and a stream. This is due to our hypothesis that areas with streams have a higher flooding suceptibility. 
 
 NEED LAND USE, NEED TREE COVER, NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
 
@@ -179,4 +179,18 @@ ggplot(inundationTestProb, aes(x = pred, fill=as.factor(obs))) +
 
 ### 4) Goodness of fit metrics
 
+Goodness of fit metrics quantify a models predictive performance. A confusion matrix takes predictions and true values and delivers the count of true negatives, false negatives, true positives, and false positives. 
 
+In order to create a confusion matrix, a threshold for predicting the dependent variable must be selected. A threshold of 50% means that when the model delivers a prediction of 0.5 or more, it becomes a prediction of an inundation zone.
+
+A threshold of 0.15 is selected for the confusion matrix below.
+
+```{r confusion_matrix, message = FALSE, warning = FALSE}
+inundationTestProb$predClass  = ifelse(inundationTestProb$pred > .15 ,1,0)
+
+caret::confusionMatrix(reference = as.factor(inundationTestProb$obs), 
+                       data = as.factor(inundationTestProb$predClass), 
+                       positive = "1")
+```
+
+Due to the low likelihood of inundation predicted by the model for all zones, a low threshold is necessary to achieve any sensitivity (true positivity). This means some specificity is sacrificed, as more non-inundation zones are labeled as inundation zones.
