@@ -160,7 +160,6 @@ The two charts below display inundation predictions for the test set. The first 
 
 The model generally predicted much lower probabilities in actual non-inundation zones. In actual inundation zones, THIS NEEDS TO BE CONTINUED WHEN MORE ELEMENTS ARE ADDED TO THE MODEL
 
-THIS PLOT NEEDS A TITLE
 
 ```{r plot_preds}
 inundationTestProb <- data.frame(obs = as.numeric(allCalgaryTest$inundation),
@@ -177,7 +176,7 @@ ggplot(inundationTestProb, aes(x = pred, fill=as.factor(obs))) +
   labs(title="Test set: predicted probabilities by actual inundation zone status")
 ```
 
-### 4) Goodness of fit metrics
+### 4) Goodness of fit metrics and cross validation
 
 Goodness of fit metrics quantify a models predictive performance. A confusion matrix takes predictions and true values and delivers the count of true negatives, false negatives, true positives, and false positives. 
 
@@ -210,4 +209,26 @@ The AUC (Area Under Curve) measures the models ability to make distinctions betw
 ```{r auc, warning = FALSE}
 auc(inundationTestProb$obs, inundationTestProb$pred)
 ```
+
+Cross validation tests the model on different combinations of data other than just a single test set. In this instance, the model will run across 100 different divisions of test and training sets. The histogram below notes the accuracy of the model on each fold. The results show a consistent level of accuracy, slightly above 0.95 out of 1.0.
+
+
+```{r k_fold, warning = FALSE, message = FALSE}
+ctrl <- trainControl(method = "cv", 
+                     number = 100, 
+                     savePredictions = TRUE)
+
+cvFit <- train(as.factor(inundation) ~ .,  data = allCalgaryTrain %>% 
+                 as.data.frame() %>%
+                 select(-geometry), 
+               method="glm", family="binomial",
+               trControl = ctrl)
+
+ggplot(as.data.frame(cvFit$resample), aes(Accuracy)) + 
+  geom_histogram(bins=100) +
+  scale_x_continuous(limits = c(0, 1)) +
+  labs(x="Accuracy",
+       y="Count")
+```
+
 
