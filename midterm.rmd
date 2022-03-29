@@ -139,7 +139,7 @@ HERE WE NEED TO ADD MORE ANALYSIS REGARDING OUR MODEL'S OUTPUT
 
 HERE WE NEED TO ADD MORE ABOUT THE P VALUE OF THE DIFFERENT FACTORS
 
-MAYBE WE ALSO CAN COME BACK TO THIS AND DO A LITTLE MORE WITH EXPONENTIATION
+MAYBE WE ALSO CAN COME BACK TO THIS AND DO A LITTLE MORE WITH EXPONENTIATION; THE TEXT BETWEEN THE LINES IS FROM THE PA RESERVATION WEEK 7 EXERCISE RMD
 _________
 But for the record, the way the coefficients in a logistic regression are interpreted is different than in OLS - we are talking in terms of "odds" of an outcome occurring (in our case odds of land being preserved.). If we exponentiate the coefficient (`exp()`) we can interpret it as *all else equal* the exponentiated value being the increase or decrease in the odds of the outcome.
 _________
@@ -151,30 +151,30 @@ The histogram below demonstrates that the great majority of tracts are predicted
 ```{r predict_calgary_test}
 # Get the results of the model on the Test set, create a histogram of the probability
 # The parameter type="response" ensures that the probabilities range from 0 to 1.
-inundationProbability <- predict(inundationModel, allCalgaryTest, type="response")
+inundationTrainProb <- predict(inundationModel, allCalgaryTest, type="response")
 
-hist(inundationProbability)
+hist(inundationTrainProb)
 ```
 
-Let’s put `classProbs` into a data frame along with the observed `preserve` outome, which is either `1` for preserved land or `0` for unpreserved.
+The two charts below display inundation predictions for the test set. The first chart shows predictions for cells that ended up being non-inundation (0) zones, and the second chart shows predictions for inundation (1) zone cells. The y-axis describes quantities of predictions produced for each level of probability.
 
-Then we build this funky plot, `testProbsPlot`. The vertical line represents a 0.5 probability of preservation.
+The model generally predicted much lower probabilities in actual non-inundation zones. In actual inundation zones, THIS NEEDS TO BE CONTINUED WHEN MORE ELEMENTS ARE ADDED TO THE MODEL
 
-*Can you interperet this plot? Can you come up with a title for this plot?*
+THIS PLOT NEEDS A TITLE
 
 ```{r plot_preds}
-testProbs <- data.frame(obs = as.numeric(preserveTest$preserve),
-                        pred = classProbs)
+inundationTestProb <- data.frame(obs = as.numeric(allCalgaryTest$inundation),
+                        pred = inundationTrainProb)
 
-ggplot(testProbs, aes(x = pred, fill=as.factor(obs))) + 
+ggplot(inundationTestProb, aes(x = pred, fill=as.factor(obs))) + 
   geom_density() +
   facet_grid(obs ~ .) + 
   xlab("Probability") + 
   geom_vline(xintercept = .5) +
-  scale_fill_manual(values = c("dark blue", "dark green"),
-                      labels = c("Not Preserved","Preserved"),
-                      name = "")+
-  plotTheme
+  scale_fill_manual(values = c("dark green", "dark blue"),
+                      labels = c("No inundation zone predicted","Inundation zone predicted"),
+                      name = "") + 
+  labs(title="Test set: predicted probabilities by actual inundation zone status")
 ```
 
 ### 4) Goodness of fit metrics
