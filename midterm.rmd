@@ -1,87 +1,75 @@
 ---
-  title: "CPLN 675: Interpolating Air Pollution Dynamics with Interpolation and Regression"
+title: "CPLN 675 Midterm"
 author: "Marquise Williams and Will Friedrichs"
-date: "2/21/2022"
-output:
+date: "3/29/2022"
+output: 
   html_document:
-  toc: true
-toc_float: true
-code_folding: hide
-code_download: true
+    code_folding: hide
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    runtime: shiny
 ---
-  
-  ```{r setup, include=FALSE,message = FALSE,cache=TRUE}
+
+For this project, a generalized linear model will be used to predict flood inundation zones first in Calgary, then in Sacramento County. For each area, predictions will estimate whether or not a given 500m by 500m "cell" of area can be described as in a flood inundation zone. This prediction process is described in four steps: data gathering, building variables, logistic metrics, and goodness of fit metrics.
+
+```{r setup, include=TRUE,message = FALSE,cache=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
+sf::sf_use_s2(FALSE)
 options(scipen=999)
+library(caret)
+library(pscl)
+library(plotROC)
+library(pROC)
+library(sf)
+library(tidyverse)
 library(knitr)
-library(raster)
-library(ggplot2)
-library(dplyrr)
+library(kableExtra)
+library(tigris)
+library(viridis)
 ```
 
 
-# Creating Our Fishnet in R
+### 1) Data Gathering
 
+The following factors will be examined as predictors of Calgary's flood inundation zones.
 
+<code>cal_dem</code>, <code>sac_dem</code>: For Calgary and Sacramento County respectively, <code>cal_dem</code> and <code>sac_dem</code> represent elevation data relative to the lowest point in the area. Flood inundation is probably more likely in low-lying areas than high elevation areas, so there is reason to suspect this factor might be significant.
 
-The `sf` package offers really easy way to create fishnet grids - `st_make_grid`.
+<code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, <code>cal_dem</code> and <code>sac_dem</code> describe the distance between any cell and a stream. This is due to our hypothesis that areas with streams have a higher flooding suceptibility. 
 
-Let's load a spatial data file and make our very own. Remember our data from Chester County in Week 2? Let's load our Chester County municipalities file, then use `st_union` to go from a bunch of polygons to just one (e.g. the boundary).
+NEED LAND USE, NEED TREE COVER, NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
+
+<code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
+
 
 ```{r load_chesco, warning = FALSE, message = FALSE}
+cal_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/Cal_dem_filled.json")
 
-sacramento_elevation <- raster("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.tif")
+cal_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/cal_dist2streams.json")
 
+cal_inundation <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/calgary_inundation.json")
 
-fishnet <- 
-  st_make_grid(sacramento_elevation,
-               cellsize = 10000, 
-               square = TRUE) %>%         # clips the grid to the chesterBoundary file
-  st_sf() %>%
-  mutate(uniqueID = rownames(.))
+cal_inundation[is.na(cal_inundation)] = 0
 
+sac_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.geojson")
 
+sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dist2streams.geojson")
 
-# Import pvout tif file
-temp <- sacramento_elevation %>%
-# Crop it to fit the dimensions of the fishnet
-  crop(y = fishnet) %>%
-  # Convert to spatial polygons data.frame
-  as('SpatialPolygonsDataFrame') %>%
-  # Convert to Sf format
-  st_as_sf()
-
-
-
-ggplot()+
-  geom_sf(data = fishnet)
-```
-
-Not sure what the projection is? It's important to know - the cellsize you set for your fishnet will be in the native units of the projection. Check `st_crs(chesterBoundary)` to find out, and `st_transform` to the projection you need if necessary.
-
-Here we are our CRS is 2272 (PA State Plane, linear unit = feet), so we're OK. We set the `cellsize = 10000` - 10,000 feet per cell.
-
-Examine the fishnet - the unique ID is crucial to building a data set!
-
-```{r make_fishnet}
-
-fishnet <- 
-  st_make_grid(chesterBoundary,
-               cellsize = 10000, 
-               square = TRUE) %>%
-  .[chesterBoundary] %>%            # clips the grid to the chesterBoundary file
-  st_sf() %>%
-  mutate(uniqueID = rownames(.))
+ggplot() +
+  geom_sf(data=cal_inundation, aes(fill=as.factor(calgary_inundation.MAJORITY))) +
+  labs(title="cal_inundation")
 ```
 
 
-Voila, now you have a fishnet you can use for your analysis. Let's take a quick look at it and add the `chesterBoundary` for some context.
+### 2) Building Variables
 
-```{r plot_fishnet}
+#MAKE CHANGES TO VARIABLES HERE: E.G. MAKE SURE ELEVATION IS RELATIVE (subtract the minimum elevation from all values)
 
-ggplot()+
-  geom_sf(data = fishnet)+
-  geom_sf(data = chesterBoundary, 
-          color = "red", fill = "transparent")
+### 3) logistic metrics
 
-```
+
+### 4) Goodness of fit metrics
+
+
