@@ -22,3 +22,5 @@ shiny
 terra
 ParamHelpers
 mlr
+cowplot
+modelr
