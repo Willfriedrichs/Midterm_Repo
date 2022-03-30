@@ -51,22 +51,6 @@ This prediction process is described in four steps: data gathering, building var
 
 
 
-Goals:
-This document serves as supplemental material to the proposal for the creation of municipal Flood Inundation Modeling & Planning Centers (FIMPC). The purpose of this document is provide an predictive 'model' that determines the probability an area floods. The aim is to provide information that helps residents, property owners, planners and municipalities make cost-effective decisions regarding their potential loss estimates based on the severity of flood active in their area.
-
-Motivations: 
-The importance is that this ‘model’ can be used by several local governments to assess their communities for flood risk and response with efforts to proactively prepare against potential flood damage based upon the likelihoods of outcomes. Specially, this ‘model’ has the potential to save lives, money and resources on the preventative side for jurisdictions that are alike.
-
-Model Description:
-The data collected for ‘models’ would include current movement or flows of streams, and the types of land use surfaces that exist in communities such as residential, commercial, agricultural, because they often determine the likelihood that the land surfaces would be water permeable. Also, data on community features such as the municipal boundaries, major city locations, urban tree cover, and distance to major rivers and streams are included to provide a physical, natural, and hydrological context to the predictions. 
-
-The document walks through the generalized linear ‘model’ used to predict flood inundation zones first in Calgary, then in takes the same approach to predicting flooding risk areas for Sacramento County, which would be the goal of the municipal FIMPC. For each area, predictions will estimate whether a given 500m by 500m "cell" of area can be described as in a flood inundation zone or at risk of flooding.
-
-This prediction process is described in four steps: data gathering, building variables, logistic metrics, and goodness of fit metrics.
-
-
-
-
 ## 2) Building Variables and Running Model
 
 ### Variable descriptions
@@ -233,6 +217,21 @@ allCalgary = allCalgary %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
                                    meanStreamDistance = dist2streams.MEAN,
                                    inundation = calgary_inundation.MAJORITY,
                                    redisCover = ZonalSt_Calgary1_MAJORITY,
+                                   commecover = ZonalSt_Calgary3_MAJORITY,
+                                   induscover = ZonalSt_Calgary4_MAJORITY,
+                                   treecover = ZonalSt_Calgary6_COUNT)
+
+
+allSacramento = st_join(sac_dem, sac_streamdist, largest = TRUE) %>%
+             st_join(sac_residcover, largest = TRUE) %>%
+             st_join(sac_treecover, largest = TRUE) %>%
+             st_join(sac_commecover, largest = TRUE) %>%
+             st_join(sac_induscover, largest = TRUE)
+
+
+allSacramento = allSacramento %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
+                                   meanStreamDistance = dist,
+                                   redisCover = ZonalSt,
                                    commecover = ZonalSt_Calgary3_MAJORITY,
                                    induscover = ZonalSt_Calgary4_MAJORITY,
                                    treecover = ZonalSt_Calgary6_COUNT)
@@ -505,7 +504,7 @@ ggplot() +
 ```{r full_cal_prediciton, warning = FALSE, message = FALSE}
 ggplot() +
   geom_sf(data=inundationAllProb, aes(fill=pred, color=pred)) +
-  labs(title="Confusion Matrix by Cell") +
+  labs(title="Full prediction set for Calgary") +
   theme(axis.text.x=element_blank(), #remove x axis labels
       axis.ticks.x=element_blank(), #remove x axis ticks
       axis.text.y=element_blank(),  #remove y axis labels
