@@ -29,7 +29,6 @@ library(kableExtra)
 library(tigris)
 library(viridis)
 library(terra)
-install.packages(terra)
 ```
 
 
@@ -37,30 +36,32 @@ install.packages(terra)
 
 The following factors will be examined as predictors of Calgary's flood inundation zones.
 
-<code>cal_dem</code>, <code>sac_dem</code>: For Calgary and Sacramento County respectively, <code>cal_dem</code> and <code>sac_dem</code> represent elevation data relative to the lowest point in the area. Flood inundation is probably more likely in low-lying areas than high elevation areas, so there is reason to suspect this factor might be significant.
+<code>cal_dem</code>, <code>sac_dem</code>: For Calgary and Sacramento County respectively, these represent elevation data relative to the lowest point in the area. Flood inundation is probably more likely in low-lying areas than high elevation areas, so there is reason to suspect this factor might be significant.
 
-<code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, <code>cal_streamdist</code> and <code>sac_streamdist</code> describe the distance between any cell and a stream. <code>cal_riverdist</code> and <code>sac_riverdist</code> also describes the distance the cells are to major rivers. These variables come to mind considering our hypothesis that areas with streams have a higher flooding susceptibility. 
+<code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, these describe the distance between any cell and a stream. 
+
+<code>cal_riverdist</code> and <code>sac_riverdist</code>: For Calgary and Sacramento County respectively, this describes the distance the cells are to major rivers. These variables come to mind considering our hypothesis that areas with streams have a higher flooding susceptibility. 
 
 Additionally, the the type of land cover may also factor into whether an area is susceptible to flooding. For example certain land uses, such as commercial or industrial may allow for greater soil impermeability than others, which increases vulnerability to flooding in some urban contexts without proper drainage. 
 
-
 For comparative reasons, land uses have been condensed into five land use zones categories for Calgary & Sacramento County: 
 
-<code>sac_residcover</code>: describes areas of Sacramento County with residential land uses,
-<code>sac_mixedcover</code>: describes areas of Sacramento County with mixed Use or transit orientated development land uses,
-<code>sac_commecover</code>: describes areas of Sacramento County with commercial land uses,
-<code>sac_induscover</code>: describes areas of Sacramento County with industrial land uses,
-<code>sac_agricover</code>: describes areas of Sacramento County with agricultural & open space land uses,  
+<code>sac_residcover</code>: This describes areas of Sacramento County with residential land uses.
+<code>sac_mixedcover</code>: This describes areas of Sacramento County with mixed Use or transit orientated development  land uses.
+<code>sac_commecover</code>: This describes areas of Sacramento County with commercial land uses.
+<code>sac_induscover</code>: This describes areas of Sacramento County with industrial land uses.
+<code>sac_agricover</code>: This describes areas of Sacramento County with agricultural & open space land uses. 
 
-<code>cal_residcover</code>: describes areas of Calgary with residential land uses,
-<code>cal_mixedcover</code>: describes areas of Calgary with mixed Use or transit orientated development land uses,
-<code>cal_commecover</code>: describes areas of Calgary with commercial land uses, 
-<code>cal_induscover</code>: describes areas of Calgary with industrial land uses, &
-<code>cal_agricover</code>: describes areas of Calgary with agricultural & open space land uses 
+<code>cal_residcover</code>: This describes areas of Calgary with residential land uses.
+<code>cal_mixedcover</code>: This describes areas of Calgary with mixed Use or transit orientated development land uses.
+<code>cal_commecover</code>: This describes areas of Calgary with commercial land uses.
+<code>cal_induscover</code>: This describes areas of Calgary with industrial land uses.
+<code>cal_agricover</code>: This describes areas of Calgary with agricultural & open space land uses.
 
-<code>cal_treecover</code> and <code>sac_treecover</code> also are used to describe the tree cover within Calgary and Sacramento County receptively. The presence of tree density may play a factor in water absorption as well as soil permeability.
+<code>cal_treecover</code> and <code>sac_treecover</code>: These are used to describe the tree cover within Calgary and Sacramento County respectively. The presence of tree density may play a factor in water absorption as well as soil permeability.
 
-NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
+<code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
+
 ```{r load_json, warning = FALSE, message = FALSE}
 cal_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/Cal_dem_filled.json", quiet = TRUE)
 
@@ -73,9 +74,7 @@ cal_inundation[is.na(cal_inundation)] = 0
 sac_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.geojson", quiet = TRUE)
 
 sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dist2streams.geojson", quiet = TRUE)
-```
 
-```{r load_geojson, warning = FALSE, message=FALSE}
 ##Sacramento & Calgary Distance to Major Rivers Variables
 
 sac_riverdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacramentoRiverDistance.json", quiet = TRUE) 
@@ -114,12 +113,9 @@ sac_treecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midte
 ```
 
 
-<code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
-
 ### 2) Building Variables and Running Model
 
-
-In this step, the variables are joined together to form one table that includes each of the independent variables and the dependent variable. Variables will also be adjusted for better comparison across regions. For example, some variables only need their geometry and the metric that is measures such as mean distance to stream from any given cell or majority of land use type for cells. This is done for variables pertaining to Calgary and Sacramento.
+The Calgary variables are joined together to form one table that includes each of the independent variables and the dependent variable. These variables will also be adjusted for better comparison across regions. For example, some variables only need their geometry and the metric that is measures such as mean distance to stream from any given cell or majority of land use type for cells.
 
 ```{r load_chesco, warning = FALSE, message = FALSE}
 ##Calgary Model
@@ -134,34 +130,29 @@ cal_dem$ZonalSt_Fishnet1.MEAN = cal_dem$ZonalSt_Fishnet1.MEAN - min_nonzero_cell
 cal_streamdist = cal_streamdist %>% select(dist2streams.MEAN)
 
 #cal_inundation only needs its geometry and the majority inundation for cells
-cal_inundation = cal_inundation %>% select(calgary_inundation.MAJORITY)
+cal_inundation = cal_inundation %>% select(calgary_inundation.MAJORITY) 
 
 #cal_residcover only needs its geometry and the majority of the areas pertaining to residential land use for cells
-cal_residcover = cal_residcover %>% select(ZonalSt_Calgary1_MAJORITY)
-#st_transform(cal_residcover, crs=3780)
-crs(cal_residcover) = "EPSG:3780" # set CRS
-st_crs(cal_residcover)
-transformed_dataframe <- st_transform(cal_residcover, crs = 3780)
-
-
+cal_residcover = cal_residcover %>% select(ZonalSt_Calgary1_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #cal_mixedcover only needs its geometry and the majority of the areas pertaining to mixed Use or transit orientated development land use for cells
-cal_mixedcover = cal_mixedcover %>% select(ZonalSt_Calgary2_MAJORITY)
+cal_mixedcover = cal_mixedcover %>% select(ZonalSt_Calgary2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #cal_commecover only needs its geometry and the majority of the areas pertaining to  commercial land uses for cells 
-cal_commecover = cal_commecover %>% select(ZonalSt_Calgary3_MAJORITY)
+cal_commecover = cal_commecover %>% select(ZonalSt_Calgary3_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #cal_induscover only needs its geometry and the majority of the areas pertaining to industrial land uses for cells
-cal_induscover = cal_induscover %>% select(ZonalSt_Calgary4_MAJORITY)
+cal_induscover = cal_induscover %>% select(ZonalSt_Calgary4_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #cal_agricover only needs its geometry and the majority of the areas pertaining to  agricultural & open space land uses for cells
-cal_agricover = cal_agricover %>% select(ZonalSt_Calgary5_MAJORITY)
+cal_agricover = cal_agricover %>% select(ZonalSt_Calgary5_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326) 
 
 #cal_treecover only needs its geometry and the count of trees in the area for each cell 
-cal_treecover = cal_treecover %>% select(ZonalSt_Calgary6_COUNT)
+cal_treecover = cal_treecover %>% select(ZonalSt_Calgary6_COUNT) %>% st_set_crs(4326) %>% st_transform(4326)
+cal_treecover[is.na(cal_treecover)] <- 0
 
 #cal_riverdist only needs its geometry and the mean distance to major rivers from any given cell 
-cal_riverdist = cal_riverdist %>% select(LastTableCalgary.MEAN)
+cal_riverdist = cal_riverdist %>% select(LastTableCalgary.MEAN) %>% st_set_crs(4326) %>% st_transform(4326)
 
 ##Sacramento Model
 
@@ -195,50 +186,48 @@ sac_riverdist = sac_riverdist %>% select(ZonalSt_SacFN_N1.MEAN)
 
 # Once in a single dataframe, discard OIDs and rename variables
 ##All Calgary
+
 allCalgary = st_join(cal_dem, cal_streamdist, largest = TRUE) %>%
              st_join(cal_inundation, largest = TRUE) %>%
-             st_join(cal_riverdist, largest = TRUE) %>% 
-  st_join(cal_residcover, largest = TRUE) #%>%
-  #st_join(cal_treecover, largest = TRUE) %>%
-  #st_join(cal_mixedcover, largest = TRUE) %>%
-  #st_join(cal_commecover, largest = TRUE) %>%
-  #st_join(cal_induscover, largest = TRUE) %>%
-  #st_join(cal_agricover, largest = TRUE)
-             ##st_join(cal_residcover, cal_mixedcover, cal_commecover, cal_induscover, cal_agricover, largest = TRUE)
-            ######### st_join(sac_streamdist, largest = TRUE) %>%     
+             st_join(cal_residcover, largest = TRUE) %>%
+             st_join(cal_treecover, largest = TRUE) %>%
+             st_join(cal_commecover, largest = TRUE) %>%
+             st_join(cal_induscover, largest = TRUE)
 
 
 allCalgary = allCalgary %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
                                    meanStreamDistance = dist2streams.MEAN,
                                    inundation = calgary_inundation.MAJORITY,
-                                   riverDistance = LastTableCalgary.MEAN)
+                                   redisCover = ZonalSt_Calgary1_MAJORITY,
+                                   commecover = ZonalSt_Calgary3_MAJORITY,
+                                   induscover = ZonalSt_Calgary4_MAJORITY,
+                                   treecover = ZonalSt_Calgary6_COUNT)
+
+par(mfrow=c(2,3))
 
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=as.factor(inundation))) +
   labs(title="cal_inundation")
 
-##All Sacramento
-allsacramento = st_join(sac_dem, sac_streamdist, largest = TRUE) %>%
-                st_join(sac_riverdist, largest = TRUE) %>%
-                st_join(sac_residcover,  largest = TRUE)
+ggplot() +
+  geom_sf(data=allCalgary, aes(fill=as.factor(meanElevation))) +
+  labs(title="cal_meanElevation")
 
 ggplot() +
-  geom_sf(data=cal_residcover, aes(fill=as.factor(ZonalSt_Calgary1_MAJORITY))) +
-  labs(title="cal_res")
-
-sac_treecover,
-sac_mixedcover,
-
-allsacramento = allsacramento %>% rename(meanElevation = demFilledSAC.MEAN,
-                                   meanStreamDistance = dist2streamsSAC.MEAN,
-                                   inundation = calgary_inundation.MAJORITY,
-                                   riverDistance = LastTableCalgary.MEAN)
+  geom_sf(data=allCalgary, aes(fill=as.factor(dist2streams.MEAN))) +
+  labs(title="cal_meanStreamDistance")
 
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=as.factor(inundation))) +
   labs(title="cal_inundation")
 
+ggplot() +
+  geom_sf(data=allCalgary, aes(fill=as.factor(meanElevation))) +
+  labs(title="cal_meanElevation")
 
+ggplot() +
+  geom_sf(data=allCalgary, aes(fill=as.factor(dist2streams.MEAN))) +
+  labs(title="cal_meanStreamDistance")
 ```
 
 The variables are now ready to be split into training and test sets, and finally, added to the linear model. The <code>set.seed()</code> and <code>createDataPartition</code> functions help to randomly select a portion (in this case 70% of cells) to join the training set. The rest form the test set.
@@ -381,9 +370,9 @@ library(mlr)
 # https://geocompr.robinlovelace.net/spatial-cv.html
 
 # create a resampling description with parameters on how we will resample our data for the cross validation. 
-rdesc = makeResampleDesc("SpRepCV", folds = 5, reps = 4)
 
 factorized_training = st_drop_geometry(allCalgaryTrain)
+factorized_training$treecover[is.na(factorized_training$treecover)] <- 0
 factorized_training$inundation = as.factor(factorized_training$inundation)
 
 calgaryTrainingTask = makeClassifTask(data = factorized_training,
@@ -391,14 +380,17 @@ calgaryTrainingTask = makeClassifTask(data = factorized_training,
                                       coordinates = as.data.frame(st_coordinates(st_centroid(allCalgaryTrain)))
 )
 
+lrn = makeLearner(cl = "classif.binomial",
+                  link = "logit",
+                  predict.type = "prob",
+                  fix.factors.prediction = TRUE)
 
-resamp = resample(makeLearner("classif.qda"), calgaryTrainingTask, rdesc)
+perf_level = makeResampleDesc(method = "SpRepCV", folds = 5, reps = 100)
 
-plots = createSpatialResamplingPlots(calgaryTrainingTask, resamp, crs = 4326,
-  repetitions = 2)
-plots
-
-sp_cv = mlr::resample(makeLearner("classif.qda"), calgaryTrainingTask, rdesc, measure = acc)
-summary(sp_cv$measures.test$acc)
-
+set.seed(012348)
+sp_cv = mlr::resample(learner = lrn, task = calgaryTrainingTask,
+                      resampling = perf_level, 
+                      measures = mlr::acc)
 ```
+
+SAC
