@@ -42,16 +42,14 @@ The following factors will be examined as predictors of Calgary's flood inundati
 
 NEED LAND USE, NEED TREE COVER, NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
 ```{r load_geojson, warning = FALSE, message=FALSE}
-##Sacramento Land Use Variables
+##Sacramento & Calgary Land Use Variables
 
 sac_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_resi_filled.geojson") ##Residential land Use
 sac_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson") ## Mixed Use/ Transit Orientated Development Land Use
 sac_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson") ## Commercial Land Use
 sac_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_industrial_filled.geojson") ##Industrial Land Use
 sac_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_argric_filled.geojson") ## Agricultural & Open Space Land Use
-```
 
-```{r load_json, warning = FALSE, message = FALSE}
 ## Calgary Land Use
 cal_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_resid.json")  ##Residential land Use
 cal_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_mixed.json") ## Mixed Use/ Transit Orientated Development Land Use
@@ -59,6 +57,7 @@ cal_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midt
 cal_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_industr.json") ##Industrial Land Use
 cal_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_agric.json") ## Agricultural & Open Space Land Use
 ```
+
 
 
 
