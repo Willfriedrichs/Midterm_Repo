@@ -182,22 +182,22 @@ sac_dem = sac_dem %>% select(demFilledSAC.MEAN)
 sac_streamdist = sac_streamdist %>% select(dist2streamsSAC.MEAN)
 
 #sac_residcover only needs its geometry and the majority of the areas pertaining to residential land use for cells
-sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY)
+sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_mixedcover only needs its geometry and the majority of the areas pertaining to mixed Use or transit orientated development land use for cells
-sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY)
+sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_commecover only needs its geometry and the majority of the areas pertaining to  commercial land uses for cells
-sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY)
+sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_induscover only needs its geometry and the majority of the areas pertaining to industrial land uses for cells
-sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY)
+sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_agricover only needs its geometry and the majority of the areas pertaining to  agricultural & open space land uses for cells
-sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY)
+sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_treecover only needs its geometry and the count of trees in the area for each cell 
-sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT)
+sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_riverdist only needs its geometry and the mean distance to major rivers from any given cell 
 sac_riverdist = sac_riverdist %>% select(ZonalSt_SacFN_N1.MEAN)
@@ -229,12 +229,12 @@ allSacramento = st_join(sac_dem, sac_streamdist, largest = TRUE) %>%
              st_join(sac_induscover, largest = TRUE)
 
 
-allSacramento = allSacramento %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
-                                   meanStreamDistance = dist,
-                                   redisCover = ZonalSt,
-                                   commecover = ZonalSt_Calgary3_MAJORITY,
-                                   induscover = ZonalSt_Calgary4_MAJORITY,
-                                   treecover = ZonalSt_Calgary6_COUNT)
+allSacramento = allSacramento %>% rename(meanElevation = demFilledSAC.MEAN,
+                                   meanStreamDistance = dist2streamsSAC.MEAN,
+                                   redisCover = ZonalSt_SacFN_N7_MAJORITY,
+                                   commecover = ZonalSt_SacFN_N2_MAJORITY,
+                                   induscover = ZonalSt_SacFN_N4_MAJORITY,
+                                   treecover = ZonalSt_SacFN_N5_COUNT)
 
 
 ```

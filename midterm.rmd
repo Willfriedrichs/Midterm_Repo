@@ -51,22 +51,6 @@ This prediction process is described in four steps: data gathering, building var
 
 
 
-Goals:
-This document serves as supplemental material to the proposal for the creation of municipal Flood Inundation Modeling & Planning Centers (FIMPC). The purpose of this document is provide an predictive 'model' that determines the probability an area floods. The aim is to provide information that helps residents, property owners, planners and municipalities make cost-effective decisions regarding their potential loss estimates based on the severity of flood active in their area.
-
-Motivations: 
-The importance is that this ‘model’ can be used by several local governments to assess their communities for flood risk and response with efforts to proactively prepare against potential flood damage based upon the likelihoods of outcomes. Specially, this ‘model’ has the potential to save lives, money and resources on the preventative side for jurisdictions that are alike.
-
-Model Description:
-The data collected for ‘models’ would include current movement or flows of streams, and the types of land use surfaces that exist in communities such as residential, commercial, agricultural, because they often determine the likelihood that the land surfaces would be water permeable. Also, data on community features such as the municipal boundaries, major city locations, urban tree cover, and distance to major rivers and streams are included to provide a physical, natural, and hydrological context to the predictions. 
-
-The document walks through the generalized linear ‘model’ used to predict flood inundation zones first in Calgary, then in takes the same approach to predicting flooding risk areas for Sacramento County, which would be the goal of the municipal FIMPC. For each area, predictions will estimate whether a given 500m by 500m "cell" of area can be described as in a flood inundation zone or at risk of flooding.
-
-This prediction process is described in four steps: data gathering, building variables, logistic metrics, and goodness of fit metrics.
-
-
-
-
 ## 2) Building Variables and Running Model
 
 ### Variable descriptions
@@ -198,22 +182,22 @@ sac_dem = sac_dem %>% select(demFilledSAC.MEAN)
 sac_streamdist = sac_streamdist %>% select(dist2streamsSAC.MEAN)
 
 #sac_residcover only needs its geometry and the majority of the areas pertaining to residential land use for cells
-sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY)
+sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_mixedcover only needs its geometry and the majority of the areas pertaining to mixed Use or transit orientated development land use for cells
-sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY)
+sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_commecover only needs its geometry and the majority of the areas pertaining to  commercial land uses for cells
-sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY)
+sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_induscover only needs its geometry and the majority of the areas pertaining to industrial land uses for cells
-sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY)
+sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_agricover only needs its geometry and the majority of the areas pertaining to  agricultural & open space land uses for cells
-sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY)
+sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_treecover only needs its geometry and the count of trees in the area for each cell 
-sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT)
+sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT) %>% st_set_crs(4326) %>% st_transform(4326)
 
 #sac_riverdist only needs its geometry and the mean distance to major rivers from any given cell 
 sac_riverdist = sac_riverdist %>% select(ZonalSt_SacFN_N1.MEAN)
@@ -236,6 +220,21 @@ allCalgary = allCalgary %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
                                    commecover = ZonalSt_Calgary3_MAJORITY,
                                    induscover = ZonalSt_Calgary4_MAJORITY,
                                    treecover = ZonalSt_Calgary6_COUNT)
+
+
+allSacramento = st_join(sac_dem, sac_streamdist, largest = TRUE) %>%
+             st_join(sac_residcover, largest = TRUE) %>%
+             st_join(sac_treecover, largest = TRUE) %>%
+             st_join(sac_commecover, largest = TRUE) %>%
+             st_join(sac_induscover, largest = TRUE)
+
+
+allSacramento = allSacramento %>% rename(meanElevation = demFilledSAC.MEAN,
+                                   meanStreamDistance = dist2streamsSAC.MEAN,
+                                   redisCover = ZonalSt_SacFN_N7_MAJORITY,
+                                   commecover = ZonalSt_SacFN_N2_MAJORITY,
+                                   induscover = ZonalSt_SacFN_N4_MAJORITY,
+                                   treecover = ZonalSt_SacFN_N5_COUNT)
 
 
 ```
@@ -505,7 +504,22 @@ ggplot() +
 ```{r full_cal_prediciton, warning = FALSE, message = FALSE}
 ggplot() +
   geom_sf(data=inundationAllProb, aes(fill=pred, color=pred)) +
-  labs(title="Confusion Matrix by Cell") +
+  labs(title="Full prediction set for Calgary") +
+  theme(axis.text.x=element_blank(), #remove x axis labels
+      axis.ticks.x=element_blank(), #remove x axis ticks
+      axis.text.y=element_blank(),  #remove y axis labels
+      axis.ticks.y=element_blank()  #remove y axis ticks
+      )
+
+```
+
+```{r full_sac_prediciton, warning = FALSE, message = FALSE}
+
+inundationAllSacProb <- add_predictions(allSacramento, inundationModel, type="response")
+
+ggplot() +
+  geom_sf(data=inundationAllSacProb, aes(fill=pred, color=pred)) +
+  labs(title="Full prediction set for Calgary") +
   theme(axis.text.x=element_blank(), #remove x axis labels
       axis.ticks.x=element_blank(), #remove x axis ticks
       axis.text.y=element_blank(),  #remove y axis labels
