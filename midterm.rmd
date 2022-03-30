@@ -62,21 +62,31 @@ NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
 ```{r load_geojson, warning = FALSE, message=FALSE}
 ##Sacramento & Calgary Land Use Variables
 
-sac_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_resi_filled.geojson", quiet = TRUE) ##Residential land Use
+sac_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_Resi_UPDATED.json", quiet = TRUE) ##Residential land Use
+
 sac_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson", quiet = TRUE) ## Mixed Use/ Transit Orientated Development Land Use
+
 sac_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson", quiet = TRUE) ## Commercial Land Use
+
 sac_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_industrial_filled.geojson", quiet = TRUE) ##Industrial Land Use
+
 sac_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_argric_filled.geojson", quiet = TRUE) ## Agricultural & Open Space Land Use
 
 ## Calgary Land Use
 cal_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_resid.json", quiet = TRUE)  ##Residential land Use
+
 cal_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_mixed.json", quiet = TRUE) ## Mixed Use/ Transit Orientated Development Land Use
+
 cal_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_commer.json", quiet = TRUE) ## Commercial Land Use
+
 cal_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_industr.json", quiet = TRUE) ##Industrial Land Use
+
 cal_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_agric.json", quiet = TRUE) ## Agricultural & Open Space Land Use
+
 
 ## Tree Cover
 cal_treecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_TreeCover__.json", quiet = TRUE)  ##Residential land Use
+
 sac_treecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_TreeCover.json", quiet = TRUE) ##Agricultural & Open Space Land Use
 
 ```
@@ -100,15 +110,16 @@ sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midt
 ### 2) Building Variables and Running Model
 
 
-In this step, the variables are joined together to form one table that includes each of the independent variables and the dependent variable. Variables will also be adjusted for better comparison across regions.
+In this step, the variables are joined together to form one table that includes each of the independent variables and the dependent variable. Variables will also be adjusted for better comparison across regions. For example, some variables only need their geometry and the metric that is measures such as mean distance to stream from any given cell or majority of land use type for cells. This is done for variables pertaining to Calgary and Sacramento.
 
 ```{r load_chesco, warning = FALSE, message = FALSE}
+##Calgary Model
+
 # cal_dem only needs its geometry and information as to the mean elevation of each cell.
 # mean elevation will be re-evaluated relative to minimum non-zero fishnet cell
 cal_dem = cal_dem %>% select(ZonalSt_Fishnet1.MEAN)
 min_nonzero_cell = min(cal_dem$ZonalSt_Fishnet1.MEAN)
 cal_dem$ZonalSt_Fishnet1.MEAN = cal_dem$ZonalSt_Fishnet1.MEAN - min_nonzero_cell
-
 
 #cal_streamdist only needs its geometry and the mean distance to stream from any given cell.
 cal_streamdist = cal_streamdist %>% select(dist2streams.MEAN)
@@ -116,6 +127,25 @@ cal_streamdist = cal_streamdist %>% select(dist2streams.MEAN)
 #cal_inundation only needs its geometry and the majority inundation for cells
 cal_inundation = cal_inundation %>% select(calgary_inundation.MAJORITY)
 
+#cal_residcover only needs its geometry and the majority of the areas pertaining to residential land use for cells
+cal_residcover = cal_residcover %>% select(ZonalSt_Calgary1_MAJORITY)
+
+#cal_mixedcover only needs its geometry and the majority of the areas pertaining to mixed Use or transit orientated development land use for cells
+cal_mixedcover = cal_mixedcover %>% select(ZonalSt_Calgary2_MAJORITY)
+
+#cal_commecover only needs its geometry and the majority of the areas pertaining to  commercial land uses for cells
+cal_commecover = cal_commecover %>% select(ZonalSt_Calgary3_MAJORITY)
+
+#cal_induscover only needs its geometry and the majority of the areas pertaining to industrial land uses for cells
+cal_induscover = cal_induscover %>% select(ZonalSt_Calgary4_MAJORITY)
+
+#cal_agricover only needs its geometry and the majority of the areas pertaining to  agricultural & open space land uses for cells
+cal_agricover = cal_agricover %>% select(ZonalSt_Calgary5_MAJORITY)
+
+#cal_treecover only needs its geometry and the count of trees in the area for each cell 
+cal_treecover = cal_treecover %>% select(ZonalSt_Calgary6_COUNT)
+
+##Sacramento Model
 
 # sac_dem only needs its geometry and information as to the mean elevation of each cell.
 # since the minimum mean elevation is nonzero in Sacramento, no readjustment is necessary.
@@ -124,11 +154,29 @@ sac_dem = sac_dem %>% select(demFilledSAC.MEAN)
 #sac_streamdist only needs its geometry and the mean distance to stream from any given cell.
 sac_streamdist = sac_streamdist %>% select(dist2streamsSAC.MEAN)
 
-# ADDITIONAL VARIABLES NEED TO BE ADDED HERE
+#sac_residcover only needs its geometry and the majority of the areas pertaining to residential land use for cells
+sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY)
+
+#sac_mixedcover only needs its geometry and the majority of the areas pertaining to mixed Use or transit orientated development land use for cells
+sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY)
+
+#sac_commecover only needs its geometry and the majority of the areas pertaining to  commercial land uses for cells
+sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY)
+
+#sac_induscover only needs its geometry and the majority of the areas pertaining to industrial land uses for cells
+sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY)
+
+#sac_agricover only needs its geometry and the majority of the areas pertaining to  agricultural & open space land uses for cells
+sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY)
+
+#sac_treecover only needs its geometry and the count of trees in the area for each cell 
+sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT)
 
 # Once in a single dataframe, discard OIDs and rename variables
+##All Calgary
 allCalgary = st_join(cal_dem, cal_streamdist, largest = TRUE) %>%
-             st_join(cal_inundation, largest = TRUE)
+             st_join(cal_inundation, largest = TRUE) %>%
+            ######### st_join(sac_streamdist, largest = TRUE) %>%     
 
 
 allCalgary = allCalgary %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
