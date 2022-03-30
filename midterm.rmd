@@ -31,6 +31,23 @@ library(viridis)
 library(terra)
 ```
 
+### Goals, & Motivations, & Model Description 
+
+Goals:
+This document serves as supplemental material to the proposal for the creation of municipal Flood Inundation Modeling & Planning Centers (FIMPC). The purpose of this document is provide an predictive 'model' that determines the probability an area floods. The aim is to provide information that helps residents, property owners, planners and municipalities make cost-effective decisions regarding their potential loss estimates based on the severity of flood active in their area.
+
+Motivations: 
+The importance is that this ‘model’ can be used by several local governments to assess their communities for flood risk and response with efforts to proactively prepare against potential flood damage based upon the likelihoods of outcomes. Specially, this ‘model’ has the potential to save lives, money and resources on the preventative side for jurisdictions that are alike.
+
+Model Description:
+The data collected for ‘models’ would include current movement or flows of streams, and the types of land use surfaces that exist in communities such as residential, commercial, agricultural, because they often determine the likelihood that the land surfaces would be water permeable. Also, data on community features such as the municipal boundaries, major city locations, urban tree cover, and distance to major rivers and streams are included to provide a physical, natural, and hydrological context to the predictions. 
+
+The document walks through the generalized linear ‘model’ used to predict flood inundation zones first in Calgary, then in takes the same approach to predicting flooding risk areas for Sacramento County, which would be the goal of the municipal FIMPC. For each area, predictions will estimate whether a given 500m by 500m "cell" of area can be described as in a flood inundation zone or at risk of flooding.
+
+This prediction process is described in four steps: data gathering, building variables, logistic metrics, and goodness of fit metrics.
+
+
+
 
 ### 1) Data Gathering
 
