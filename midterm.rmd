@@ -28,7 +28,6 @@ library(knitr)
 library(kableExtra)
 library(tigris)
 library(viridis)
-install.packages("lwgeom", dependencies = TRUE)
 ```
 
 
@@ -40,45 +39,63 @@ The following factors will be examined as predictors of Calgary's flood inundati
 
 <code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, <code>cal_streamdist</code> and <code>sac_streamdist</code> describe the distance between any cell and a stream. This is due to our hypothesis that areas with streams have a higher flooding susceptibility. 
 
-NEED LAND USE, NEED TREE COVER, NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
+Additionally, the the type of land cover may also factor into whether an area is susceptible to flooding. For example certain land uses, such as commercial or industrial may allow for greater soil impermeability than others, which increases vulnerability to flooding in some urban contexts without proper drainage. 
+
+
+For comparative reasons, land uses have been condensed into five land use zones categories for Calgary & Sacramento County: 
+
+<code>sac_residcover</code>: describes areas of Sacramento County with residential land uses,
+<code>sac_mixedcover</code>: describes areas of Sacramento County with mixed Use or transit orientated development land uses,
+<code>sac_commecover</code>: describes areas of Sacramento County with commercial land uses,
+<code>sac_induscover</code>: describes areas of Sacramento County with industrial land uses,
+<code>sac_agricover</code>: describes areas of Sacramento County with agricultural & open space land uses,  
+
+<code>cal_residcover</code>: describes areas of Calgary with residential land uses,
+<code>cal_mixedcover</code>: describes areas of Calgary with mixed Use or transit orientated development land uses,
+<code>cal_commecover</code>: describes areas of Calgary with commercial land uses, 
+<code>cal_induscover</code>: describes areas of Calgary with industrial land uses, &
+<code>cal_agricover</code>: describes areas of Calgary with agricultural & open space land uses 
+
+<code>cal_treecover</code> and <code>sac_treecover</code> also are used to describe the tree cover within Calgary and Sacramento County receptively. The presence of tree density may play a factor in water absorption as well as soil permeability.
+
+NEED DISTANCE TO RIVER AS ADDITIONAL FACTORS HERE
 ```{r load_geojson, warning = FALSE, message=FALSE}
 ##Sacramento & Calgary Land Use Variables
 
-sac_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_resi_filled.geojson") ##Residential land Use
-sac_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson") ## Mixed Use/ Transit Orientated Development Land Use
-sac_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson") ## Commercial Land Use
-sac_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_industrial_filled.geojson") ##Industrial Land Use
-sac_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_argric_filled.geojson") ## Agricultural & Open Space Land Use
+sac_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_resi_filled.geojson", quiet = TRUE) ##Residential land Use
+sac_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson", quiet = TRUE) ## Mixed Use/ Transit Orientated Development Land Use
+sac_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_mixed_filled.geojson", quiet = TRUE) ## Commercial Land Use
+sac_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_industrial_filled.geojson", quiet = TRUE) ##Industrial Land Use
+sac_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_argric_filled.geojson", quiet = TRUE) ## Agricultural & Open Space Land Use
 
 ## Calgary Land Use
-cal_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_resid.json")  ##Residential land Use
-cal_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_mixed.json") ## Mixed Use/ Transit Orientated Development Land Use
-cal_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_commer.json") ## Commercial Land Use
-cal_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_industr.json") ##Industrial Land Use
-cal_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_agric.json") ## Agricultural & Open Space Land Use
+cal_residcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_resid.json", quiet = TRUE)  ##Residential land Use
+cal_mixedcover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_mixed.json", quiet = TRUE) ## Mixed Use/ Transit Orientated Development Land Use
+cal_commecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_commer.json", quiet = TRUE) ## Commercial Land Use
+cal_induscover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_industr.json", quiet = TRUE) ##Industrial Land Use
+cal_agricover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_agric.json", quiet = TRUE) ## Agricultural & Open Space Land Use
+
+## Tree Cover
+cal_treecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/CalgaryFishnet_TreeCover__.json", quiet = TRUE)  ##Residential land Use
+sac_treecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/SacFN_New_TreeCover.json", quiet = TRUE) ##Agricultural & Open Space Land Use
+
 ```
 
-
-
-
-
-<code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
-
-
 ```{r load_json, warning = FALSE, message = FALSE}
-cal_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/Cal_dem_filled.json")
+cal_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/Cal_dem_filled.json", quiet = TRUE)
 
-cal_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/cal_dist2streams.json")
+cal_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/cal_dist2streams.json", quiet = TRUE)
 
-cal_inundation <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/calgary_inundation.json")
+cal_inundation <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/calgary_inundation.json", quiet = TRUE)
 
 cal_inundation[is.na(cal_inundation)] = 0
 
-sac_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.geojson")
+sac_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dem_filled.geojson", quiet = TRUE)
 
-sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dist2streams.geojson")
+sac_streamdist <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/sac_dist2streams.geojson", quiet = TRUE)
 ```
 
+<code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
 
 ### 2) Building Variables and Running Model
 
