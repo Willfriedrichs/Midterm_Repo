@@ -31,6 +31,7 @@ library(viridis)
 library(terra)
 library(cowplot)
 library(modelr)
+install.packages("lwgeom" = TRUE)
 ```
 
 ## 1) Goals, & Motivations, & Model Description 
@@ -519,7 +520,7 @@ inundationAllSacProb <- add_predictions(allSacramento, inundationModel, type="re
 
 ggplot() +
   geom_sf(data=inundationAllSacProb, aes(fill=pred, color=pred)) +
-  labs(title="Full prediction set for Calgary") +
+  labs(title="Full prediction set for Sacramento") +
   theme(axis.text.x=element_blank(), #remove x axis labels
       axis.ticks.x=element_blank(), #remove x axis ticks
       axis.text.y=element_blank(),  #remove y axis labels
