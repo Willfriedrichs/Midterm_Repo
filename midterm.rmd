@@ -31,8 +31,7 @@ library(viridis)
 library(terra)
 library(cowplot)
 library(modelr)
-install.packages("lwgeom" = TRUE)
-install.packages("lwgeom" =TRUE)
+#install.packages("lwgeom" = TRUE)
 ```
 
 ## 1) Goals, & Motivations, & Model Description 
