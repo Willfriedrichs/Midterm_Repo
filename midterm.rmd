@@ -31,8 +31,8 @@ library(viridis)
 library(terra)
 library(cowplot)
 library(modelr)
-#install.packages("lwgeom" = TRUE)
 ```
+
 
 ```{r mapTheme, echo=TRUE}
 mapTheme <- theme(plot.title =element_text(size=12),
@@ -69,53 +69,50 @@ plotTheme <- theme(
   axis.ticks=element_blank())
 ```
 
+
 ## 1) Goals, & Motivations, & Model Description 
 
-Goals:
-This document serves as supplemental material to the proposal for the creation of municipal Flood Inundation Modeling & Planning Centers (FIMPC). The document provides a predictive 'model' that determines the probability an area floods. The aim is to research risks and to better prepare local residents, property owners, and municipalities to put forward plans for improvements based on the severity of flood active in their area.
+**Goals:**
+This document serves as supplemental material to the proposal for the creation of municipal Flood Inundation Modeling & Planning Centers (FIMPC). The purpose of this document is provide an predictive model that determines the probability an area floods. The aim is to provide information that helps residents, property owners, planners and municipalities make cost-effective decisions regarding their potential loss estimates based on the severity of flood active in their area.
 
-Motivations: 
-The importance is that this ‘model’ can be used to support the FIMPC and local governments to assess their communities for flood risk and response with efforts to proactively prepare against future potential flood damage based upon the likelihoods of outcomes. 
+**Motivations:**
+The importance is that this model can be used by several local governments to assess their communities for flood risk and respond with efforts to proactively prepare against potential flood damage based upon the likelihoods of outcomes. Specially, this model has the potential to save lives, money and resources on the preventative side for jurisdictions that are alike.
 
-For example, the FIMPC could use the predictive model to estimate the locations of the most at-risk areas in the context of the worsening storm surges of hurricane season or heavy rain. Planners at FIMPC could then present this data to the city councils, and support resiliency measures given financial constraints via a cost-benefit analysis. The success of such interventions could start a cycle of research, funding, and improvements based on the realm of flood inundation mapping and predictions.
+***Model Description:***
+The data collected for models would include current movement or flows of streams, and the types of land uses that exist in communities such (residential, commercial, industrial), because they are often related to the likelihood that the land surfaces would be water permeable. Also, data on community features such as the municipal boundaries, major city locations, urban tree cover, and distance to major rivers and streams are included to provide a physical, natural, and hydrological context to the predictions. 
 
-Model Description:
-The data collected for this ‘model’ would include the current movement or flow of streams, and the types of land use surfaces that exist in communities such as residential, commercial, agricultural, because they often determine the likelihood that the land surfaces would be water permeable. Also, data on community features such as the municipal boundaries, major city locations, urban tree cover, and distance to major rivers and streams are included to provide a physical, natural, and hydrological context to the predictions. 
-
-
-
-
-
+The document walks through the generalized linear model used to predict flood inundation zones first in Calgary, then in takes the same approach to predicting flooding risk areas for Sacramento County, which would be the goal of the municipal FIMPC. Sacramento County is used for demonstration of the model because both areas have flood risk associated with moving inland rivers. Sacramento County is larger than Calgary's area, but the county used for comparison because land use at the Sacramento County level is more analogous to Calgary land use patterns than land use within Sacramento City proper is. For both Calgary and Sacramento County, predictions will estimate whether a given 500m by 500m "cell" of area can be described as in a flood inundation zone or at risk of flooding.
 
 ## 2) Building Variables and Running Model
 
 ### Variable descriptions
 
-The following factors will be examined as predictors of Calgary's flood inundation zones.
+The following factors will be examined as predictors of Calgary's flood inundation zones. When data are loaded into the model from a specific city, a prefix is attached (e.g. <code>cal_dem</code> for Calgary or <code>sac_dem</code> for Sacramento).
 
-<code>cal_dem</code>, <code>sac_dem</code>: For Calgary and Sacramento County respectively, these represent elevation data relative to the lowest point in the area. Flood inundation is probably more likely in low-lying areas than high elevation areas, so there is reason to suspect this factor might be significant.
+<code>dem</code>: This factor represents elevation data relative to the lowest point in the area. It comes from the Digital Elevation Model (DEM). Flood inundation is probably more likely in low-lying areas than high elevation areas, so there is reason to suspect this factor might be significant.
 
-<code>cal_streamdist</code>, <code>sac_streamdist</code>: For Calgary and Sacramento County respectively, these describe the distance between any cell and a stream. 
+<code>streamdist</code>: This describes the distance between any cell and a stream. Stream locations are calculated from DEM files using ArcGIS _Flow Direction_ and _Flow Accumulation_ tools, which mark DEM locations with especially high drainage as a stream.
 
-<code>cal_riverdist</code> and <code>sac_riverdist</code>: For Calgary and Sacramento County respectively, this describes the distance the cells are to major rivers. These variables come to mind considering our hypothesis that areas with streams have a higher flooding susceptibility. 
+<code>riverdist</code>: This describes the distance the cells are to major rivers. Distance is measured in relation to the closest part of a river's edge rather than in relation to a river's center point.
+
+<codecal_treecover</code>: This factor used to describe the tree cover within an area. The presence of tree density may play a factor in water absorption as well as soil permeability.
 
 Additionally, the the type of land cover may also factor into whether an area is susceptible to flooding. For example certain land uses, such as commercial or industrial may allow for greater soil impermeability than others, which increases vulnerability to flooding in some urban contexts without proper drainage. 
 
-For comparative reasons, land uses have been condensed into five land use zones categories for Calgary & Sacramento County: 
+Calgary and Sacramento County land uses are organized into five types:
 
-<code>cal_residcover</code> and <code>sac_residcover</code>: This describes areas of Calgary and Sacramento County with residential land uses.
+<code>residcover</code>: Residential land uses
 
-<code>cal_mixedcover</code> and <code>sac_mixedcover</code>: This describes areas of Calgary and Sacramento County with mixed Use or transit orientated development  land uses.
+<code>mixedcover</code>: Mixed Use or transit orientated development land uses.
 
-<code>cal_commecover</code> and <code>sac_commecover</code>: This describes areas of Calgary and Sacramento County with commercial land uses.
+<code>commecover</code>: Commercial land uses
 
-<code>cal_induscover</code> and <code>sac_induscover</code>: This describes areas of Calgary and Sacramento County with industrial land uses.
+<code>induscover</code>: Industrial land uses
 
-<code>sac_agricover</code> and <code>sac_agricover</code>: This describes areas of Calgary and Sacramento County with agricultural & open space land uses. 
+<code>agricover</code>: Agricultural and open space land uses
 
-<code>cal_treecover</code> and <code>sac_treecover</code>: These are used to describe the tree cover within Calgary and Sacramento County respectively. The presence of tree density may play a factor in water absorption as well as soil permeability.
 
-<code>cal_inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it.
+<code>inundation</code>: This is what our model aims to predict. We will train our model on part of Calgary flood inundation fishnet, and test our predictions on another part of it. Finally, we will predict an <code>inundation</code> layer for Sacramento.
 
 ```{r load_json, warning = FALSE, message = FALSE}
 cal_dem <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midterm_Repo/main/Finalized_Layers/Cal_dem_filled.json", quiet = TRUE)
@@ -169,7 +166,10 @@ sac_treecover <- st_read("https://raw.githubusercontent.com/Willfriedrichs/Midte
 
 ### Putting variables together
 
-The Calgary variables are joined together to form one table that includes each of the independent variables and the dependent variable. These variables will also be adjusted for better comparison across regions. For example, some variables only need their geometry and the metric that is measures such as mean distance to stream from any given cell or majority of land use type for cells.
+Some of these variables have a stronger relationship to inundation in Calgary than others--only six variables are used in the final prediction of the dependent variable. Some factors like mixed use and agricultural land cover were not at all significant predictors of inundation zones, and others, such as distance to rivers, were left out due to multicolinearity.
+
+
+The model created by these six variables will be used to predict inundation zones in other areas, so some variables are adjusted for better regional comparison. For example, elevation will be considered relative to cities' lowest points rather than relative to sea level.
 
 ```{r load_chesco, warning = FALSE, message = FALSE}
 ##Calgary Model
@@ -212,31 +212,31 @@ cal_riverdist = cal_riverdist %>% select(LastTableCalgary.MEAN) %>% st_set_crs(4
 
 # sac_dem only needs its geometry and information as to the mean elevation of each cell.
 # since the minimum mean elevation is nonzero in Sacramento, no readjustment is necessary.
-sac_dem = sac_dem %>% select(demFilledSAC.MEAN)
+sac_dem = sac_dem %>% select(demFilledSAC.MEAN) %>% st_set_crs(3780) %>% st_transform(4326)
 
 #sac_streamdist only needs its geometry and the mean distance to stream from any given cell.
-sac_streamdist = sac_streamdist %>% select(dist2streamsSAC.MEAN)
+sac_streamdist = sac_streamdist %>% select(dist2streamsSAC.MEAN) %>% st_set_crs(3780) %>% st_transform(4326)
 
 #sac_residcover only needs its geometry and the majority of the areas pertaining to residential land use for cells
-sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
+sac_residcover = sac_residcover %>% select(ZonalSt_SacFN_N7_MAJORITY) %>% st_set_crs(3780) %>% st_transform(4326)
 
 #sac_mixedcover only needs its geometry and the majority of the areas pertaining to mixed Use or transit orientated development land use for cells
-sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
+sac_mixedcover = sac_mixedcover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(3780) %>% st_transform(4326)
 
 #sac_commecover only needs its geometry and the majority of the areas pertaining to  commercial land uses for cells
-sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
+sac_commecover = sac_commecover %>% select(ZonalSt_SacFN_N2_MAJORITY) %>% st_set_crs(4326)
 
 #sac_induscover only needs its geometry and the majority of the areas pertaining to industrial land uses for cells
-sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
+sac_induscover = sac_induscover %>% select(ZonalSt_SacFN_N4_MAJORITY) %>% st_set_crs(4326)
 
 #sac_agricover only needs its geometry and the majority of the areas pertaining to  agricultural & open space land uses for cells
-sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY) %>% st_set_crs(4326) %>% st_transform(4326)
+sac_agricover = sac_agricover %>% select(ZonalSt_SacFN_N5.MAJORITY) %>% st_set_crs(3780) %>% st_transform(4326)
 
 #sac_treecover only needs its geometry and the count of trees in the area for each cell 
-sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT) %>% st_set_crs(4326) %>% st_transform(4326)
+sac_treecover = sac_treecover %>% select(ZonalSt_SacFN_N5_COUNT) %>% st_set_crs(3780) %>% st_transform(4326)
 
 #sac_riverdist only needs its geometry and the mean distance to major rivers from any given cell 
-sac_riverdist = sac_riverdist %>% select(ZonalSt_SacFN_N1.MEAN)
+sac_riverdist = sac_riverdist %>% select(ZonalSt_SacFN_N1.MEAN) %>% st_set_crs(3780) %>% st_transform(4326)
 
 # Once in a single dataframe, discard OIDs and rename variables
 ##All Calgary
@@ -252,7 +252,7 @@ allCalgary = st_join(cal_dem, cal_streamdist, largest = TRUE) %>%
 allCalgary = allCalgary %>% rename(meanElevation = ZonalSt_Fishnet1.MEAN,
                                    meanStreamDistance = dist2streams.MEAN,
                                    inundation = calgary_inundation.MAJORITY,
-                                   redisCover = ZonalSt_Calgary1_MAJORITY,
+                                   residcover = ZonalSt_Calgary1_MAJORITY,
                                    commecover = ZonalSt_Calgary3_MAJORITY,
                                    induscover = ZonalSt_Calgary4_MAJORITY,
                                    treecover = ZonalSt_Calgary6_COUNT)
@@ -267,7 +267,7 @@ allSacramento = st_join(sac_dem, sac_streamdist, largest = TRUE) %>%
 
 allSacramento = allSacramento %>% rename(meanElevation = demFilledSAC.MEAN,
                                    meanStreamDistance = dist2streamsSAC.MEAN,
-                                   redisCover = ZonalSt_SacFN_N7_MAJORITY,
+                                   residcover = ZonalSt_SacFN_N7_MAJORITY,
                                    commecover = ZonalSt_SacFN_N2_MAJORITY,
                                    induscover = ZonalSt_SacFN_N4_MAJORITY,
                                    treecover = ZonalSt_SacFN_N5_COUNT)
@@ -275,52 +275,64 @@ allSacramento = allSacramento %>% rename(meanElevation = demFilledSAC.MEAN,
 
 ```
 
+Inundation in Calgary is mapped below.
 
-Each of the predictors is mapped below.
+This map of Calgary's Inundation Zones, like the other maps below, are made to fit a fishnet with 0.5km by 0.5km cells. The full, high resolution version of the Calgary Inundation Zone map includes the zones that are too skinny to appear on the fishnet, such as the ones following the Bow River north of its convergence with the Elbow River at the center of the map. The model's use of this fishnet version of the Calgary Inundation Zones map means it will be less likely to accurately predict zones along the northern part of the Bow River. A version of this model using a fishnet with smaller cells would probably perform better in that area. 
 
-```{r ggplots, warning = FALSE, message = FALSE}
-
+```{r ggplot_inundation, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=as.factor(inundation), 
-                               color="transparent")) +
-  labs(title="Inundation") +
+  geom_sf(data=allCalgary, aes(fill=as.factor(inundation)), color=NA) +
+  labs(title="Inundation Areas", fill="Zone Type") +
+  scale_fill_manual(labels = c("Non-inundation zone", "Inundation zone"),
+                    values = c("springgreen3","royalblue4")) +
   mapTheme
+```
 
+Each of the predictors in Calgary are mapped below.
+
+```{r ggplot_meanElevation, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=as.numeric(meanElevation), 
-                              color=as.numeric(meanElevation))) +
-  labs(title="Elevation") +
+  geom_sf(data=allCalgary, aes(fill=as.numeric(meanElevation)), color=NA) +
+  scale_fill_viridis() +
+  labs(title="Mean Elevation (relative to lowest point)", fill="Elevation (m)") +
   mapTheme
+```
 
+```{r ggplot_meanStreamDistance, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=as.numeric(meanStreamDistance),                       
-                               color=as.numeric(meanStreamDistance))) +
-  labs(title="Distance to Stream") +
+  geom_sf(data=allCalgary, aes(fill=as.numeric(meanStreamDistance)), color=NA) +
+  scale_fill_viridis() +
+  labs(title="Mean Distance to Nearest Stream", fill="Distance (m)") +
   mapTheme
+```
 
-
+```{r ggplot_residcover, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=redisCover,
-                               color=redisCover)) +
-  labs(title=":LU Residential") +
+  geom_sf(data=allCalgary, aes(fill=as.factor(residcover)), color=NA) +
+  labs(title="Residential Land Use", fill="Land Use Type") +
+  scale_fill_manual(labels = c("Non-Residential", "Residential"),
+                    values = c("springgreen3","seagreen")) +
   mapTheme
+```
 
 
+```{r ggplot_commecover, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=commecover,
-                               color=commecover)) +
-  labs(title="LU Commercial") +
+  geom_sf(data=allCalgary, aes(fill=as.factor(commecover)), color=NA) +
+  labs(title="Commercial Land Use", fill="Land Use Type") +
+  scale_fill_manual(labels = c("Non-Commercial", "Commercial"),
+                    values = c("springgreen3","turquoise1")) +
   mapTheme
+```
 
 
+```{r ggplot_induscover, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=induscover,
-                               color=induscover)) +
-  labs(title="LU Industrial") +
+  geom_sf(data=allCalgary, aes(fill=as.factor(induscover)), color=NA) +
+  labs(title="Industrial Land Use", fill="Land Use Type") +
+  scale_fill_manual(labels = c("Non-Industrial", "Industrial"),
+                    values = c("springgreen3","yellow3")) +
   mapTheme
-
-  
-
 ```
 
 The variables are now ready to be split into training and test sets, and finally, added to the linear model. The <code>set.seed()</code> and <code>createDataPartition</code> functions help to randomly select a portion (in this case 70% of cells) to join the training set. The rest form the test set.
@@ -351,14 +363,14 @@ inundationModel <- glm(inundation ~ .,
 
 ### Model results
 
-The summary below displays information describing the relationship between the independent variables and inundation zones in Calgary. Note that not all of the data collected is included in the final model. Some factors like mixed use and agricultural land cover were not at all significant predictors of inundation zones, and others, such as distance to rivers, were left out due to multicolinearity.
+The summary below displays information describing the relationship between the independent variables and inundation zones in Calgary. Note that not all of the data collected is included in the final model, only the six variables previously determined to have significant relationships with inundation while avoiding colinearity.
 
 ```{r logistc_metrics, warining = FALSE, message = FALSE}
 # Get summary statistics for the inundationModel
 summary(inundationModel)
 ```
 
-The model output, as displayed by the <code>summary()</code> function, shows the coefficients of the model. This is mathematically what produces inundation predictions by cell. The coefficients of <code>meanElevation</code> and <code>meanStreamDistance</code> are both negative, meaning that the greater these values get, the lower the chance a given cell will be predicted to be in an inundation zone. This makes sense, as low elevation and low distance to streams pose greater flood risks. <code>redisCover</code>, <code>commecover</code>, and <code>induscover</code> are all also negatively related to the output, meaning the model estimates these types of development to decrease the likelihood of a cell being in an inundation zone.
+The model output, as displayed by the <code>summary()</code> function, shows the coefficients of the model. This is mathematically what produces inundation predictions by cell. The coefficients of <code>meanElevation</code> and <code>meanStreamDistance</code> are both negative, meaning that the greater these values get, the lower the chance a given cell will be predicted to be in an inundation zone. This makes sense, as low elevation and low distance to streams pose greater flood risks. <code>residcover</code>, <code>commecover</code>, and <code>induscover</code> are all also negatively related to the output, meaning the model estimates these types of development to decrease the likelihood of a cell being in an inundation zone.
 
 The <code>inundationModel</code> can be used to predict for any geographic cells given the previously specified independent variables with the <code>predict()</code> function. In this case, the model will be used to predict for the test set. The output, <code>inundationProbability</code>, will describe the model's prediction of the likelihood that each cell will be in an inundation zone.
 
@@ -369,7 +381,10 @@ The histogram below demonstrates that the great majority of tracts are predicted
 # The parameter type="response" ensures that the probabilities range from 0 to 1.
 inundationTrainProb <- predict(inundationModel, allCalgaryTest, type="response")
 
-hist(inundationTrainProb)
+hist(inundationTrainProb,
+     main = "Frequency of Inundation Likelihood Levels",
+     xlab = "Probability of being in an inundation zone",
+     ylab = "Number of cells with the specified inundation zone probability")
 ```
 
 The two charts below display inundation predictions for the test set. The first chart shows predictions for cells that ended up being non-inundation (0) zones, and the second chart shows predictions for inundation (1) zone cells. The y-axis describes quantities of predictions produced for each level of probability.
@@ -385,10 +400,11 @@ ggplot(inundationTestProb, aes(x = pred, fill=as.factor(obs))) +
   facet_grid(obs ~ .) + 
   xlab("Probability") + 
   geom_vline(xintercept = .5) +
-  scale_fill_manual(values = c("dark green", "dark blue"),
+  scale_fill_manual(values = c("springgreen3", "royalblue4"),
                       labels = c("No inundation zone predicted","Inundation zone predicted"),
                       name = "") + 
-  labs(title="Test set: predicted probabilities by actual inundation zone status")
+  labs(title="Test set: predicted probabilities by actual inundation zone status") +
+  plotTheme
 ```
 
 
@@ -408,17 +424,18 @@ caret::confusionMatrix(reference = as.factor(inundationTestProb$obs),
                        positive = "1")
 ```
 
-An ROC or "Reciever Operating Characteristic" curve is anther metric that describes a model's goodness of fit. It measures the relationship between sensitivity (True positive fraction) and specificity (false positive fraction) at different levels of prediction threshold. On the chart below, the black line is the performance of the model, and it is compared to a gray line that represents a hypothetical "coin flip" model.
+An ROC or "Receiver Operating Characteristic" curve is anther metric that describes a model's goodness of fit. It measures the relationship between sensitivity (True positive fraction) and specificity (false positive fraction) at different levels of prediction threshold. On the chart below, the black line is the performance of the model, and it is compared to a gray line that represents a hypothetical "coin flip" model.
 
 ```{r roc_curve, message = FALSE, warning = FALSE}
 
 ggplot(inundationTestProb, aes(d = obs, m = pred)) + 
   geom_roc(n.cuts = 50, labels = FALSE) + 
   style_roc(theme = theme_grey) +
-  geom_abline(slope = 1, intercept = 0, size = 1.5, color = 'grey') 
+  geom_abline(slope = 1, intercept = 0, size = 1.5, color = 'grey') + 
+  plotTheme
 ```
 
-The AUC (Area Under Curve) measures the models ability to make distinctions between the two classes, in this case non-inundation and inundation zones on a fishnet. An AUC close to 1.0 suggests that the model is a relatively well-performing one.
+The AUC (Area Under Curve) measures the model's ability to make distinctions between the two classes, in this case non-inundation and inundation zones on a fishnet. An AUC close to 1.0 suggests that the model is a relatively well-performing one.
   
 ```{r auc, warning = FALSE}
 auc(inundationTestProb$obs, inundationTestProb$pred)
@@ -447,7 +464,7 @@ summary(cvFit$resample$Accuracy)
 
 ### Spatial cross validation
 
-Spatial cross validation creates regional test sets, such that any region of the fishnet where the fuction performs particularly poorly can be identified. Summary statistics of the accuracy of each of the 100 spatially-specific predictions are displayed below. These results, similar to those above, confirm the model 
+Spatial cross validation creates regional test sets, such that any region within the fishnet where the function performs particularly poorly can be identified. With the help of the <code>mlr</code> package, a learner is created that automatically partitions the Calgary fishnet into five regional folds. This folding process is repeated 100 times. Summary statistics of the accuracy of predictions based on the folds are displayed below. These results, similar to those above, confirm the model's accuracy.
 
 ```{r spatial_CV, warning = FALSE, message = FALSE}
 library(mlr)
@@ -481,11 +498,14 @@ sp_cv = mlr::resample(learner = lrn, task = calgaryTrainingTask,
 summary(sp_cv$measures.test$acc)
 ```
 
-## 4) Confusion matrix map, Calgary inundation predictions, and predictions for Sacramento
+## 4) Calgary and Sacramento Full Predictions
 
-### Confusion matrix map
+### Calgary Confusion Matrix Map
 
-The maps below show confusion matrix values by cell across Calgary based on the model.
+The map below shows confusion matrix values by cell across Calgary based on the model. While the model generates a likelihood that a cell falls into an inundation zone or not, for the purposes of the following analysis, any prediction of greater than 0.15 will be considered a prediction of an inundation zone. 
+
+True positives start around the confluence of the Bow and Elbow rivers, which is visible as the purple area near the centroid of Calgary's shape. The true positives follow the Bow river south until it reaches the city limits. False negatives occur along the Elbow River towards the west, and in isolated areas of the Bow river north of the previously mentioned confluence point. False positives appear sporadically near streams and low-lying areas.
+
 
 ```{r confusion_mapped, warning = FALSE, message = FALSE}
 # Combine the Calgary training and test sets, including associated predictions
@@ -506,39 +526,37 @@ inundationAllProb <- transform(inundationAllProb, confusion = ifelse(pred < 0.15
                                                                      confusion))
 
 ggplot() +
-  geom_sf(data=inundationAllProb, aes(fill=confusion, color=confusion)) +
-  labs(title="Confusion Matrix by Cell") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  geom_sf(data=inundationAllProb, aes(fill=confusion), color=NA) +
+  labs(title="Confusion Matrix by Cell", fill="Category") +
+  mapTheme
 ```
+
+### Full Calgary Prediction Map
+
+Below are the raw results of model's predictions on Calgary as a whole. The predictions illustrated below are the basis for the confusion matrix analysis above. Rather than being presented as a binary, the map below shows probabilities of an inundation zone as estimated by the model as a decimal.
 
 ```{r full_cal_prediciton, warning = FALSE, message = FALSE}
 ggplot() +
-  geom_sf(data=inundationAllProb, aes(fill=pred, color=pred)) +
-  labs(title="Full prediction set for Calgary") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  geom_sf(data=inundationAllProb, aes(fill=as.numeric(pred)), color=NA) +
+  scale_fill_viridis() +
+  labs(title="Full Prediction Set for Calgary Inundation", fill="Prediction") +
+  mapTheme
 
 ```
+
+Section 2 of this analysis references issues associated with the fishnet cell size. In retrospect, using a fishnet of inundation zones with smaller cell sizes and making predictions accordingly may have resulted in a more accurate set of predictions. 
+
+### Full Sacramento Prediction Map
 
 ```{r full_sac_prediciton, warning = FALSE, message = FALSE}
 
 inundationAllSacProb <- add_predictions(allSacramento, inundationModel, type="response")
 
 ggplot() +
-  geom_sf(data=inundationAllSacProb, aes(fill=pred, color=pred)) +
-  labs(title="Full prediction set for Sacramento") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  geom_sf(data=inundationAllSacProb, aes(fill=as.numeric(pred)), color=NA) +
+  scale_fill_viridis() +
+  labs(title="Full Prediction Set for Calgary Inundation", fill="Prediction") +
+  mapTheme
 
 ```
 
