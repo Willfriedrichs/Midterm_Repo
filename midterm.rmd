@@ -34,6 +34,41 @@ library(modelr)
 #install.packages("lwgeom" = TRUE)
 ```
 
+```{r mapTheme, echo=TRUE}
+mapTheme <- theme(plot.title =element_text(size=12),
+                  plot.subtitle = element_text(size=8),
+                  plot.caption = element_text(size = 6),
+                  axis.line=element_blank(),
+                  axis.text.x=element_blank(),
+                  axis.text.y=element_blank(),
+                  axis.ticks=element_blank(),
+                  axis.title.x=element_blank(),
+                  axis.title.y=element_blank(),
+                  panel.background=element_blank(),
+                  panel.border=element_blank(),
+                  panel.grid.major=element_line(colour = 'transparent'),
+                  panel.grid.minor=element_blank(),
+                  legend.direction = "vertical", 
+                  legend.position = "right",
+                  plot.margin = margin(1, 1, 1, 1, 'cm'),
+                  legend.key.height = unit(1, "cm"), legend.key.width = unit(0.2, "cm"))
+
+plotTheme <- theme(
+  plot.title =element_text(size=12),
+  plot.subtitle = element_text(size=8),
+  plot.caption = element_text(size = 6),
+  axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+  axis.text.y = element_text(size = 10),
+  axis.title.y = element_text(size = 10),
+  # Set the entire chart region to blank
+  panel.background=element_blank(),
+  plot.background=element_blank(),
+  #panel.border=element_rect(colour="#F0F0F0"),
+  # Format the grid
+  panel.grid.major=element_line(colour="#D0D0D0",size=.75),
+  axis.ticks=element_blank())
+```
+
 ## 1) Goals, & Motivations, & Model Description 
 
 Goals:
@@ -246,65 +281,43 @@ Each of the predictors is mapped below.
 ```{r ggplots, warning = FALSE, message = FALSE}
 
 ggplot() +
-  geom_sf(data=allCalgary, aes(fill=inundation, color=inundation)) +
+  geom_sf(data=allCalgary, aes(fill=as.factor(inundation), 
+                               color="transparent")) +
   labs(title="Inundation") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  mapTheme
+
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=as.numeric(meanElevation), 
                               color=as.numeric(meanElevation))) +
   labs(title="Elevation") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  mapTheme
 
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=as.numeric(meanStreamDistance),                       
                                color=as.numeric(meanStreamDistance))) +
   labs(title="Distance to Stream") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  mapTheme
 
 
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=redisCover,
                                color=redisCover)) +
   labs(title=":LU Residential") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-    axis.ticks.x=element_blank(), #remove x axis ticks
-    axis.text.y=element_blank(),  #remove y axis labels
-    axis.ticks.y=element_blank()  #remove y axis ticks
-    )
+  mapTheme
 
 
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=commecover,
                                color=commecover)) +
   labs(title="LU Commercial") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-      axis.ticks.x=element_blank(), #remove x axis ticks
-      axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank()  #remove y axis ticks
-      )
+  mapTheme
 
 
 ggplot() +
   geom_sf(data=allCalgary, aes(fill=induscover,
                                color=induscover)) +
   labs(title="LU Industrial") +
-  theme(axis.text.x=element_blank(), #remove x axis labels
-    axis.ticks.x=element_blank(), #remove x axis ticks
-    axis.text.y=element_blank(),  #remove y axis labels
-    axis.ticks.y=element_blank()  #remove y axis ticks
-    )
+  mapTheme
 
   
 
