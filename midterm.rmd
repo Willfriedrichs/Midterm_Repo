@@ -14,6 +14,8 @@ output:
 
 For this project, a generalized linear model will be used to predict flood inundation zones first in Calgary, then in Sacramento County. For each area, predictions will estimate whether or not a given 500m by 500m "cell" of area can be described as in a flood inundation zone. This prediction process is described in four steps: data gathering, building variables, logistic metrics, and goodness of fit metrics.
 
+Video Link: https://upenn.box.com/s/ckwluy0uqd73dnv2w8034ye2iz9x5ecd
+
 ```{r setup, include=TRUE,message = FALSE,cache=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 sf::sf_use_s2(FALSE)
