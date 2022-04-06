@@ -556,7 +556,7 @@ inundationAllSacProb <- add_predictions(allSacramento, inundationModel, type="re
 ggplot() +
   geom_sf(data=inundationAllSacProb, aes(fill=as.numeric(pred)), color=NA) +
   scale_fill_viridis() +
-  labs(title="Full Prediction Set for Calgary Inundation", fill="Prediction") +
+  labs(title="Full Prediction Set for Sacramento Inundation", fill="Prediction") +
   mapTheme
 
 ```
